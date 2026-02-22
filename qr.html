@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AR Sanal Lab — QR</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+  <style>
+    :root{ color-scheme: light; }
+    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 14px; }
+    .top{
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+    .top img{ height:44px; width:auto; }
+    .top h1{ font-size:18px; margin:0; }
+    .top .btn{
+      margin-left:auto;
+      border:1px solid #d5d5d5; background:#fff; padding:10px 12px; border-radius:12px;
+      cursor:pointer; font-weight:700;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+    }
+    .card{
+      border:1px solid #e5e5e5;
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .name{ font-weight:800; margin-bottom:10px; }
+    .row{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+    .col{ min-width: 170px; }
+    .tag{
+      display:inline-block;
+      font-size:12px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid #ddd;
+      background:#fafafa;
+      margin-bottom:6px;
+      font-weight:700;
+    }
+    canvas{ background:#fff; padding:8px; border-radius:12px; border:1px solid #eee; }
+    .links{ margin-top:8px; font-size:12px; }
+    .links a{ color:#0b57d0; text-decoration:none; }
+    .links a:hover{ text-decoration:underline; }
+
+    .footer-credit{
+      text-align:center;
+      padding: 14px 12px 8px;
+      font-size: 11px;
+      opacity: .65;
+      letter-spacing: .2px;
+    }
+
+    @media print{
+      .top .btn{ display:none; }
+      body{ margin: 0; }
+      .card{ break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <img src="assets/maku_logo_420.png" alt="MAKÜ Logo">
+    <div>
+      <h1>AR Sanal Lab — QR (Android + iOS)</h1>
+      <div style="font-size:12px;opacity:.7">Her model için iki ayrı QR (Android ve iOS)</div>
+    </div>
+    <button class="btn" onclick="window.print()">Yazdır</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="footer-credit">Bu uygulama Dr. Tahsin UYGUN tarafından hazırlanmıştır.</div>
+
+  <script>
+    const MODELS = Array.from({length:10}, (_,i)=>({ id:`model${i+1}`, name:`Model ${i+1}` }));
+
+    // bulunduğu klasör (GitHub Pages kökü gibi davranır)
+    const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+
+    const grid = document.getElementById("grid");
+
+    async function makeQR(canvas, url){
+      await QRCode.toCanvas(canvas, url, { width: 170, margin: 1 });
+    }
+
+    (async () => {
+      for (const m of MODELS){
+        const androidUrl = `${base}android.html?m=${encodeURIComponent(m.id)}`;
+        const iosUrl     = `${base}ios.html?m=${encodeURIComponent(m.id)}`;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="name">${m.name}</div>
+          <div class="row">
+            <div class="col">
+              <div class="tag">Android</div><br/>
+              <canvas id="a-${m.id}"></canvas>
+              <div class="links"><a href="${androidUrl}">Aç</a></div>
+            </div>
+            <div class="col">
+              <div class="tag">iOS</div><br/>
+              <canvas id="i-${m.id}"></canvas>
+              <div class="links"><a href="${iosUrl}">Aç</a></div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        await makeQR(card.querySelector(`#a-${m.id}`), androidUrl);
+        await makeQR(card.querySelector(`#i-${m.id}`), iosUrl);
+      }
+    })();
+  </script>
+</body>
+</html>

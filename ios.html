@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>AR Sanal Lab • iOS</title>
+
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    :root{
+      --bg0:#070A12; --bg1:#0B1020;
+      --text:#EAF1FF; --muted: rgba(234,241,255,.72);
+      --accent:#6D5BFF; --accent2:#26D0FF;
+      --shadow: 0 18px 40px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(109,91,255,.45), transparent 55%),
+        radial-gradient(900px 500px at 100% 10%, rgba(38,208,255,.25), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+    }
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      padding: 12px 12px 10px;
+      backdrop-filter: blur(10px);
+      background: rgba(6,10,18,.55);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .brand{ display:flex; align-items:center; gap:10px; min-width: 180px; }
+    .brand img{ height:38px; width:auto; display:block; filter: drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
+    .brand .title{ display:flex; flex-direction:column; line-height:1.05; }
+    .brand .title b{ font-size:14px; letter-spacing:.2px; }
+    .brand .title span{ font-size:12px; color:var(--muted); }
+
+    .select{
+      flex: 1 1 220px; min-width: 220px;
+      padding: 12px 14px; border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text); outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 12px 14px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--text); cursor:pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      transition: transform .12s ease, border-color .12s ease;
+      user-select:none; -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn[disabled]{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .btn-primary{
+      border: 0;
+      background: linear-gradient(135deg, rgba(109,91,255,.95), rgba(38,208,255,.80));
+      box-shadow: 0 14px 30px rgba(109,91,255,.18), 0 10px 24px rgba(38,208,255,.12);
+      color:#081018; font-weight: 900;
+    }
+    .icon{ width:18px; height:18px; display:block; }
+
+    .wrap{ padding: 12px; }
+    .panel{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    model-viewer{
+      width:100%;
+      height: 74vh;
+      background: radial-gradient(700px 400px at 50% 20%, rgba(255,255,255,.08), transparent 55%);
+    }
+    .progress{
+      position:absolute; left:14px; right:14px; bottom:14px;
+      height:10px; border-radius:999px;
+      background: rgba(255,255,255,.10);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+    }
+    .bar{
+      height:100%; width: 0%;
+      border-radius:999px;
+      background: linear-gradient(90deg, rgba(109,91,255,.95), rgba(38,208,255,.90));
+      transition: width .12s linear;
+    }
+    .footer-credit{
+      text-align:center;
+      padding: 10px 12px 16px;
+      font-size: 11px;
+      opacity: .65;
+      letter-spacing: .2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="row">
+      <div class="brand">
+        <img src="assets/maku_logo_420.png" alt="MAKÜ Logo">
+        <div class="title">
+          <b>AR Sanal Lab</b>
+          <span>iOS</span>
+        </div>
+      </div>
+
+      <select id="sel" class="select" aria-label="Parça seç"></select>
+
+      <button id="goAR" class="btn btn-primary" disabled>
+        <svg class="icon" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l8 4.5v11L12 22 4 17.5v-11L12 2Z" stroke="currentColor" stroke-width="2" />
+          <path d="M12 2v20" stroke="currentColor" stroke-width="2"/>
+          <path d="M4 6.5l8 4.5 8-4.5" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        AR Başlat
+      </button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="panel">
+      <model-viewer
+        id="mv"
+        src=""
+        ar
+        ar-modes="quick-look"
+        ar-scale="auto"
+        camera-controls
+        environment-image="neutral"
+        shadow-intensity="1"
+        touch-action="pan-y"
+        alt="3D model">
+        <div class="progress" slot="progress-bar"><div class="bar" id="bar"></div></div>
+      </model-viewer>
+    </div>
+  </div>
+
+  <div class="footer-credit">Bu uygulama Dr. Tahsin UYGUN tarafından hazırlanmıştır.</div>
+
+  <script>
+    // Repo root: model1.glb ... model10.glb
+    // iOS Quick Look en stabil hali: usdz/ klasörüne USDZ koyup ios-src vermek.
+    const MODELS = Array.from({length:10}, (_,i)=>({
+      id:`model${i+1}`,
+      name:`Model ${i+1}`,
+      glb:`model${i+1}.glb`,
+      usdz:`usdz/model${i+1}.usdz` // varsa otomatik kullanacağız
+    }));
+
+    const sel = document.getElementById('sel');
+    const mv  = document.getElementById('mv');
+    const goAR= document.getElementById('goAR');
+    const bar = document.getElementById('bar');
+
+    MODELS.forEach(m=>{
+      const o=document.createElement('option');
+      o.value=m.id; o.textContent=m.name;
+      sel.appendChild(o);
+    });
+
+    async function setModel(id){
+      const m = MODELS.find(x=>x.id===id) || MODELS[0];
+      sel.value = m.id;
+      goAR.disabled = true;
+      mv.src = m.glb;
+
+      // USDZ varsa ios-src set et (yoksa set etmeyip glb üzerinden dene)
+      try{
+        const r = await fetch(m.usdz, { method:'HEAD' });
+        if (r.ok) mv.setAttribute('ios-src', m.usdz);
+        else mv.removeAttribute('ios-src');
+      } catch {
+        mv.removeAttribute('ios-src');
+      }
+
+      const url=new URL(location.href);
+      url.searchParams.set('m', m.id);
+      history.replaceState({},'',url);
+    }
+
+    const initId = new URL(location.href).searchParams.get('m') || MODELS[0].id;
+    setModel(initId);
+
+    sel.addEventListener('change', ()=> setModel(sel.value));
+
+    mv.addEventListener('progress', (e)=>{
+      const p = Math.max(0, Math.min(1, e.detail.totalProgress || 0));
+      bar.style.width = `${Math.round(p*100)}%`;
+    });
+
+    mv.addEventListener('load', ()=>{ goAR.disabled = false; });
+
+    mv.addEventListener('error', ()=>{
+      goAR.disabled = true;
+      alert("Model yüklenemedi. Dosya adı/yolu doğru mu? (modelX.glb repo root'ta olmalı)");
+    });
+
+    goAR.addEventListener('click', async ()=>{
+      if (typeof mv.activateAR === "function") {
+        try { await mv.activateAR(); } catch(e) {}
+      } else {
+        const b = mv.querySelector('button[slot="ar-button"]');
+        if (b) b.click();
+      }
+    });
+  </script>
+</body>
+</html>
